@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sleep Tracker</title>
+    <link rel="stylesheet" href="https://pyscript.net/latest/pyscript.css">
+    <script defer src="https://pyscript.net/latest/pyscript.js"></script>
+    <style>
+        /* Styles for the body, background animation, and overall design
+            References:
+            MDN Web Docs - Font Family: https://developer.mozilla.org/en-US/docs/Web/CSS/font-family
+            MDN Web Docs - Flexbox: https://css-tricks.com/snippets/css/a-guide-to-flexbox/ */
+        body {
+            font-family: 'Arial', sans-serif;
+            background: #000000;
+            color: #f0f0f0;
+            display: flex; 
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+         /* Background animation for a starry-like effect
+            References:
+            MDN Web Docs - CSS Grs: https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Images/Using_gradients
+            MDN Web Docs - CSS Animations: https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Animations 
+        */
+        body::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: 
+                radial-gradient(white, rgba(255,255,255,.2) 2px, transparent 40px),
+                radial-gradient(white, rgba(255,255,255,.15) 1px, transparent 30px),
+                radial-gradient(white, rgba(255,255,255,.1) 2px, transparent 40px),
+                radial-gradient(rgba(255,255,255,.4), rgba(255,255,255,.1) 2px, transparent 30px);
+            background-size: 550px 550px, 350px 350px, 250px 250px, 150px 150px;
+            background-position: 0 0, 40px 60px, 130px 270px, 70px 100px;
+            animation: backgroundAnimation 50s linear infinite; 
+        }
+    
+        @keyframes backgroundAnimation {
+            0% {
+                background-position: 0 0, 40px 60px, 130px 270px, 70px 100px;
+            }
+            100% {
+                background-position: 550px 550px, 390px 410px, 380px 820px, 220px 650px;
+            }
+        }
+        /* Main container styling
+            Reference:
+            MDN Web Docs - border-radius: https://developer.mozilla.org/en-US/docs/Web/CSS/border-radius
+            MDN Web Docs - box-shadow: https://developer.mozilla.org/en-US/docs/Web/CSS/box-shadow
+        */
+        .container {
+            background: rgba(20, 20, 40, 0.8);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 4px 20px rgba(255, 255, 255, 0.1); 
+            text-align: center;
+            width: 100%;
+            max-width: 450px;
+            overflow: auto;
+            max-height: 90vh;
+            position: relative;
+            z-index: 1;
+        }
+         /* Title and input form styles
+            References:
+            MDN Web Docs - border: https://developer.mozilla.org/en-US/docs/Web/CSS/border
+            MDN Web Docs - border-radius: https://developer.mozilla.org/en-US/docs/Web/CSS/border-radius
+            MDN Web Docs - border-color: https://developer.mozilla.org/en-US/docs/Web/CSS/border-color
+            MDN Web Docs - transition: https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Transitions/Using_CSS_transitions
+        */
+        h1 {
+            font-size: 24px;
+            color: #ffffff;
+            margin-bottom: 20px;
+        }
+    
+        .circle {
+            width: 120px;
+            height: 120px;
+            border: 10px solid #6a4c93; 
+            border-radius: 50%; 
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 20px auto;
+            position: relative;
+            background: #3e3e54;
+        }
+    
+        .circle span {
+            position: absolute;
+            font-size: 24px;
+            color: #ffffff;
+        }
+    
+        label {
+            display: block;
+            margin-top: 10px;
+            font-weight: bold;
+            color: #ffffff;
+        }
+    
+        input, textarea {
+            width: calc(100% - 20px);
+            padding: 10px;
+            margin: 5px 0;
+            border: 1px solid #6a4c93; 
+            border-radius: 10px; 
+            background: rgba(70, 70, 80, 0.7);
+            color: #ffffff;
+        }
+    
+        input:focus, textarea:focus {
+            border-color: #9c27b0; 
+            outline: none;
+        }
+    
+        button {
+            background-color: #9c27b0;
+            color: white;
+            border: none; 
+            border-radius: 10px; 
+            padding: 12px;
+            cursor: pointer;
+            margin-top: 10px;
+            transition: background-color 0.3s; 
+            width: 100%;
+        }
+    
+        button:hover {
+            background-color: #a24bc3;
+        }
+    
+        .entry {
+            margin-top: 10px;
+            padding: 10px;
+            background-color: rgba(70, 70, 80, 0.8);
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(255, 255, 255, 0.1);
+        }
+    
+        .summary, .insights {
+            margin-top: 20px;
+            padding: 10px;
+            background-color: rgba(50, 50, 70, 0.8);
+            border-radius: 10px;
+            border-left: 5px solid #6a4c93;
+            text-align: left;
+        }
+    
+        h2 {
+            margin-top: 20px;
+            font-size: 20px;
+            color: #ffffff;
+        }
+       
+        .progress-bar {
+            height: 20px;
+            background-color: #6a4c93;
+            border-radius: 10px;
+            margin-top: 10px;
+            position: relative;
+            width: 100%;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background-color: #9c27b0;
+            border-radius: 10px;
+            width: 0;
+        }
+        
+        .progress-text {
+            position: absolute;
+            width: 100%;
+            text-align: center;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Sleep Tracker</h1>
+        <div class="circle">
+            <span id="durationDisplay">0.0</span> hours
+        </div>
+        <!-- Sleep form inputs for date, time, quality, and notes -->
+        <label for="sleep_date">Date:</label>
+        <input type="date" id="sleep_date">
+
+        <label for="sleep_start">Sleep Start Time:</label>
+        <input type="time" id="sleep_start">
+
+        <label for="wake_date">Wake Date:</label>
+        <input type="date" id="wake_date">
+
+        <label for="wake_time">Wake Time:</label>
+        <input type="time" id="wake_time">
+
+        <label for="sleep_quality">Sleep Quality (1-5):</label>
+        <input type="number" id="sleep_quality" min="1" max="5">
+
+        <label for="sleep_goal">Sleep Goal (hours):</label>
+        <input type="number" id="sleep_goal" min="1" max="12">
+
+        <label for="sleep_notes">Sleep Notes:</label>
+        <textarea id="sleep_notes" rows="3"></textarea>
+
+        <!-- Buttons for submitting and resetting data -->
+        <button id="submit_btn">Submit</button>
+        <button id="reset_btn">Reset Data</button>
+        <button id="export_btn">Export Data (CSV)</button>
+
+        <h2>Your Sleep Entries</h2>
+        <div id="entryList"></div>
+
+        <div class="summary" id="summary"></div>
+        <div class="insights" id="insights"></div>
+
+        <h2>Sleep Goal Progress</h2>
+        <div class="progress-bar">
+            <div class="progress-fill" id="progressFill"></div>
+            <span class="progress-text" id="progressText">0%</span>
+        </div>
+
+        <h2>Best and Worst Sleep</h2>
+        <div class="summary" id="bestSleep"></div>
+        <div class="summary" id="worstSleep"></div>
+
+        <h2>Sleep Quality Tips</h2>
+        <div class="insights" id="sleepTips"></div>
+    </div>
+
+    <!-- 
+        PyScript code to manage sleep data and interaction 
+        Reference:
+        PyScript Documentation: https://pyscript.net/latest/docs/ 
+    -->
+    <py-script>
+        from pyscript import Element
+        from datetime import datetime
+        import js
+        import json
+
+        # Initialize sleep_data as an empty dictionary
+        sleep_data = {}
+        sleep_goal = 7  # Default goal
+
+        def is_valid_sleep_entry(entry):
+            return isinstance(entry, dict) and 'duration' in entry and 'quality' in entry
+    
+        '''
+        Load existing data from local storage
+        References for Local Storage:
+        MDN Web Docs - Local Storage: https://developer.mozilla.org/en-US/docs/Web/API/Window/localStorage
+        MDN Web Docs - Window.confirm: https://developer.mozilla.org/en-US/docs/Web/API/Window/confirm
+        '''
+        def load_data():
+            global sleep_data, sleep_goal
+            try:
+                saved_data = js.localStorage.getItem("sleep_data")
+                saved_goal = js.localStorage.getItem("sleep_goal")
+                
+                if saved_data:
+                    loaded_data = json.loads(saved_data)
+                    if isinstance(loaded_data, dict):
+                        sleep_data = {k: v for k, v in loaded_data.items() if is_valid_sleep_entry(v)}
+                    else:
+                        sleep_data = {}
+                else:
+                    sleep_data = {}
+
+                if saved_goal:
+                    sleep_goal = int(saved_goal)
+                else:
+                    sleep_goal = 7
+            except json.JSONDecodeError:
+                sleep_data = {}
+            except ValueError:
+                sleep_goal = 7
+            except Exception as e:
+                print(f"Error loading data: {e}")
+                sleep_data = {}
+                sleep_goal = 7
+
+            save_data()
+            refresh_entry_list()
+        '''    
+        Save the cleaned data
+        Save sleep data to local storage 
+        References for Local Storage: 
+        MDN Web Docs - Local Storage: https://developer.mozilla.org/en-US/docs/Web/API/Window/localStorage
+        MDN Web Docs - Window.confirm: https://developer.mozilla.org/en-US/docs/Web/API/Window/confirm
+        '''
+        def save_data():
+            try:
+                js.localStorage.setItem("sleep_data", json.dumps(sleep_data))
+                js.localStorage.setItem("sleep_goal", str(sleep_goal))
+            except Exception as e:
+                print(f"Error saving data: {e}")
+
+        def refresh_entry_list():
+            entry_list = Element('entryList')
+            entry_list.element.innerHTML = ''
+            
+            total_duration = 0
+            for date, data in sleep_data.items():
+                total_duration += data['duration']
+                entry_div = f"""
+                    <div class="entry">
+                        {date}: {data['duration']:.2f} hours, Quality: {data['quality']}
+                        <p>Notes: {data.get('notes', 'N/A')}</p>
+                    </div>
+                """
+                entry_list.element.innerHTML += entry_div
+
+            Element('durationDisplay').element.innerHTML = f"{total_duration:.2f}"
+            update_summary(total_duration)
+            update_goal_progress(total_duration)
+            update_best_worst_sleep()
+            update_sleep_tips()
+            update_insights()
+
+        def update_summary(total_duration):
+            total_quality = sum(data['quality'] for data in sleep_data.values())
+            entry_count = len(sleep_data)
+
+            average_duration = total_duration / entry_count if entry_count > 0 else 0
+            average_quality = total_quality / entry_count if entry_count > 0 else 0
+
+            summary_element = Element('summary')
+            summary_text = f"""
+                <h3>Summary:</h3>
+                <p>Total Sleep Entries: {entry_count}</p>
+                <p>Average Sleep Duration: {average_duration:.2f} hours</p>
+                <p>Average Sleep Quality: {average_quality:.2f}</p>
+                <p>Sleep Goal: {sleep_goal} hours</p>
+            """
+            summary_element.element.innerHTML = summary_text
+
+        '''
+        Calculate progress as a percentage of the goal, ensuring it doesn't exceed 100%
+        References:
+        MDN Web Docs - CSS width Property: https://developer.mozilla.org/en-US/docs/Web/CSS/width
+         MDN Web Docs - Element.style: https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement/style
+        '''
+        def update_goal_progress(total_duration):
+            total_sleep_goal_duration = sleep_goal * len(sleep_data)
+            progress_percentage = (total_duration / total_sleep_goal_duration) * 100 if total_sleep_goal_duration > 0 else 0
+            progress_percentage = min(progress_percentage, 100)
+
+            progress_fill = Element('progressFill')
+            progress_fill.element.style.width = f"{progress_percentage}%"
+            
+            progress_text = Element('progressText')
+            progress_text.element.innerHTML = f"{progress_percentage:.0f}%"
+        
+        '''
+        Update the best and worst sleep entries
+        References:
+        Python `max()` function documentation: https://docs.python.org/3/library/functions.html#max
+        Python `min()` function documentation: https://docs.python.org/3/library/functions.html#min
+        '''
+        def update_best_worst_sleep():
+            if not sleep_data:
+                Element('bestSleep').element.innerHTML = "No data"
+                Element('worstSleep').element.innerHTML = "No data"
+                return
+            
+            best_sleep = max(sleep_data.items(), key=lambda x: x[1]['duration'])
+            worst_sleep = min(sleep_data.items(), key=lambda x: x[1]['duration'])
+            
+            best_sleep_div = f"""
+                <h3>Best Sleep</h3>
+                <p>{best_sleep[0]}: {best_sleep[1]['duration']:.2f} hours, Quality: {best_sleep[1]['quality']}</p>
+            """
+            worst_sleep_div = f"""
+                <h3>Worst Sleep</h3>
+                <p>{worst_sleep[0]}: {worst_sleep[1]['duration']:.2f} hours, Quality: {worst_sleep[1]['quality']}</p>
+            """
+            
+            Element('bestSleep').element.innerHTML = best_sleep_div
+            Element('worstSleep').element.innerHTML = worst_sleep_div
+        
+        '''
+        Update sleep tips based on average quality
+        References:
+        MDN Web Docs - innerHTML property: https://developer.mozilla.org/en-US/docs/Web/API/Element/innerHTML
+            General sleep quality recommendations: https://www.sleepfoundation.org/sleep-tips
+        '''
+        def update_sleep_tips():
+            total_quality = sum(data['quality'] for data in sleep_data.values())
+            entry_count = len(sleep_data)
+            average_quality = total_quality / entry_count if entry_count > 0 else  0
+
+            tips_element = Element('sleepTips')
+
+            if average_quality >= 4:
+                tips_element.element.innerHTML = "<p>Great job! Keep up the good work for restful nights.</p>"
+            elif average_quality >= 2:
+                tips_element.element.innerHTML = "<p>Your sleep quality is average. Try maintaining a regular bedtime and avoid caffeine late in the day.</p>"
+            else:
+                tips_element.element.innerHTML = "<p>Consider improving your sleep environment, avoiding screens before bed, and managing stress for better sleep.</p>"
+               
+        ''' 
+        Update insights based on sleep data
+        References:
+        MDN Web Docs - innerHTML property: https://developer.mozilla.org/en-US/docs/Web/API/Element/innerHTML
+        ''' 
+        def update_insights():
+            insights_element = Element('insights')
+            if not sleep_data:
+                insights_element.element.innerHTML = "<p>No sleep data yet!</p>"
+                return
+
+            entry_count = len(sleep_data)
+            quality_entries = [data['quality'] for data in sleep_data.values()]
+            good_quality_count = sum(1 for q in quality_entries if q >= 4)
+
+            insights_element.element.innerHTML = f"""
+                <h3>Insights</h3>
+                <p>{good_quality_count} out of {entry_count} sleeps were of high quality (4 or 5 rating).</p>
+            """
+
+        def calculate_sleep_duration(start_date, start_time, end_date, end_time):
+            try:
+                sleep_start = datetime.strptime(f'{start_date} {start_time}', '%Y-%m-%d %H:%M')
+                sleep_end = datetime.strptime(f'{end_date} {end_time}', '%Y-%m-%d %H:%M')
+                duration = (sleep_end - sleep_start).total_seconds() / 3600
+                return duration if duration > 0 else 0
+            except ValueError:
+                return 0
+
+        def submit_entry(event):
+            global sleep_goal
+            date = Element('sleep_date').element.value
+            start_time = Element('sleep_start').element.value
+            wake_date = Element('wake_date').element.value
+            end_time = Element('wake_time').element.value
+            quality = Element('sleep_quality').element.value
+            notes = Element('sleep_notes').element.value
+            goal_input = Element('sleep_goal').element.value
+
+            if not all([date, start_time, wake_date, end_time, quality]):
+                js.alert("Please fill in all required fields.")
+                return
+
+            try:
+                quality = int(quality)
+                if not 1 <= quality <= 5:
+                    raise ValueError("Quality must be between 1 and 5")
+            except ValueError:
+                js.alert("Sleep quality must be a number between 1 and 5.")
+                return
+
+            if goal_input:
+                sleep_goal = int(goal_input)
+
+            duration = calculate_sleep_duration(date, start_time, wake_date, end_time)
+
+            if duration > 0:
+                sleep_data[date] = {
+                    'duration': duration,
+                    'quality': quality,
+                    'notes': notes
+                }
+                save_data()
+                refresh_entry_list()
+
+                # Clear input fields after successful submission
+                for field in ['sleep_date', 'sleep_start', 'wake_date', 'wake_time', 'sleep_quality', 'sleep_notes']:
+                    Element(field).element.value = ''
+
+                js.alert("Sleep data submitted successfully!")
+            else:
+                js.alert("Invalid sleep entry! Please check the dates and times.")
+                
+        '''
+        Function to reset all data
+        References for Local Storage: 
+        MDN Web Docs - Local Storage: https://developer.mozilla.org/en-US/docs/Web/API/Window/localStorage
+        MDN Web Docs - Window.confirm: https://developer.mozilla.org/en-US/docs/Web/API/Window/confirm
+        '''
+        def reset_data(event):
+            global sleep_data, sleep_goal
+            if js.confirm("Are you sure you want to reset all sleep data? This action cannot be undone."):
+                sleep_data = {}
+                sleep_goal = 7
+                save_data()
+                refresh_entry_list()
+                js.alert("All sleep data has been reset.")
+
+        def export_data(event):
+            if not sleep_data:
+                js.alert("No sleep data to export.")
+                return
+
+            csv_data = "Date,Duration (hours),Quality,Notes\n"
+            for date, data in sleep_data.items():
+                csv_data += f"{date},{data['duration']:.2f},{data['quality']},{data.get('notes', '')}\n"
+
+            blob = js.Blob.new([csv_data], { "type": "text/csv" })
+            link = js.document.createElement("a")
+            link.href = js.URL.createObjectURL(blob)
+            link.download = "sleep_data.csv"
+            js.document.body.appendChild(link)
+            link.click()
+            js.document.body.removeChild(link)
+
+            js.alert("Data exported as sleep_data.csv")
+
+        # Attach button actions to their corresponding functions
+        Element('submit_btn').element.onclick = submit_entry
+        Element('reset_btn').element.onclick = reset_data
+        Element('export_btn').element.onclick = export_data
+
+        load_data()
+
+    </py-script>
+</body>
+</html>
